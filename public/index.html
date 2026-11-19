@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViralClip Studio — YouTube URL to Viral Shorts</title>
+  <style>
+    :root {
+      --bg: #141210;
+      --surface: #1e1b18;
+      --surface-2: #292420;
+      --border: #3d352e;
+      --text: #f4efe8;
+      --muted: #a89d91;
+      --accent: #d4a373;
+      --accent-hover: #e5b887;
+      --success: #4ade80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 18px; line-height: 1.5; }
+    .container { max-width: 1180px; margin: 0 auto; }
+
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; gap: 8px;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header span { font-size: 0.82rem; color: var(--muted); }
+
+    .grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
+    @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; margin-bottom: 18px;
+    }
+    .card h2 { font-size: 1.02rem; margin-bottom: 10px; color: var(--text); }
+
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin: 11px 0 5px; }
+    input, select, textarea {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); padding: 11px 12px; border-radius: 8px; font-size: 0.92rem;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    @media (max-width: 540px) { .row { flex-direction: column; } }
+
+    button, .save-btn {
+      display: block; text-align: center; text-decoration: none;
+      background: var(--accent); color: #141210; border: none; padding: 12px 16px;
+      border-radius: 8px; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+      transition: 0.15s; margin-top: 12px; width: 100%;
+    }
+    button:hover, .save-btn:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .save-btn { background: var(--success); color: #0a140d; }
+
+    .clip-list { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
+    .clip-item {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 11px 13px; display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: 0.15s; gap: 8px;
+    }
+    .clip-item.active { border-color: var(--accent); background: #2f2822; }
+    .clip-badge {
+      background: rgba(212, 163, 115, 0.16); color: var(--accent);
+      padding: 4px 9px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;
+    }
+
+    .preview-wrap { display: flex; flex-direction: column; align-items: center; }
+    video {
+      width: 100%; max-width: 310px; aspect-ratio: 9 / 16;
+      background: #000; border-radius: 16px; border: 2px solid var(--border);
+    }
+
+    .status {
+      margin-top: 12px; font-size: 0.83rem; color: var(--muted);
+      background: var(--surface-2); padding: 11px 13px; border-radius: 8px;
+      width: 100%; max-width: 310px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>ViralClip Studio</h1>
+        <span>YouTube URL Only • Auto Most-Replayed Detector • 9:16 Vertical Shorts Generator</span>
+      </div>
+      <span>Works on Laptop & Phone</span>
+    </header>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h2>1. Paste YouTube Video URL & Auto-Detect Viral Moments</h2>
+          <label>YouTube Video URL</label>
+          <input type="text" id="ytUrl" placeholder="https://youtu.be/... or https://www.youtube.com/watch?v=..." />
+          <button id="findPeaksBtn">Auto-Find Top Viral Moments</button>
+          <div id="videoInfo" style="margin-top:10px; font-size:0.84rem; color:var(--accent);"></div>
+          <div id="peaksList" class="clip-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>2. Automatic Cleanup & Viral Styling</h2>
+          <div class="row">
+            <div>
+              <label>Start Time (sec)</label>
+              <input type="number" id="startSec" value="0" min="0" step="1" />
+            </div>
+            <div>
+              <label>End Time (sec)</label>
+              <input type="number" id="endSec" value="20" min="5" step="1" />
+            </div>
+            <div>
+              <label>Dead Air / Pause Cutter</label>
+              <select id="silenceCut">
+                <option value="smart" selected>Smart (Remove dead air)</option>
+                <option value="aggressive">Aggressive (Skip all pauses)</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>9:16 Vertical Layout</label>
+              <select id="layoutMode">
+                <option value="blur-fill" selected>Full Widescreen + Blurred Backdrop</option>
+                <option value="center-punch">Center Action Zoom (Full Screen)</option>
+              </select>
+            </div>
+            <div>
+              <label>Color & Sharpness Boost</label>
+              <select id="colorFilter">
+                <option value="vibrant" selected>Viral Punch (Vibrant)</option>
+                <option value="cinematic">Cinematic Dark</option>
+                <option value="none">Original</option>
+              </select>
+            </div>
+          </div>
+
+          <label>Top Viral Hook Banner</label>
+          <input type="text" id="hookInput" value="WAIT FOR THIS MOMENT" />
+
+          <label>Auto-Timed Captions (One line per beat)</label>
+          <textarea id="captionsInput" rows="3" placeholder="Nobody expected this to happen...&#10;Watch closely right here!&#10;Insane detail."></textarea>
+        </div>
+      </div>
+
+      <div>
+        <div class="card preview-wrap">
+          <h2 style="width:100%; max-width:310px;">3. Preview & Save Short</h2>
+          <video id="resultVideo" controls playsinline></video>
+
+          <div style="width:100%; max-width:310px;">
+            <button id="generateBtn">Generate Short From URL</button>
+            <a id="saveBtn" class="save-btn" style="display:none;" download>Save MP4 to Laptop / Phone</a>
+          </div>
+
+          <div class="status" id="statusBox">
+            Paste any YouTube URL on the left, click "Auto-Find Top Viral Moments", then click "Generate Short From URL".
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ytUrl = document.getElementById('ytUrl');
+    const findPeaksBtn = document.getElementById('findPeaksBtn');
+    const videoInfo = document.getElementById('videoInfo');
+    const peaksList = document.getElementById('peaksList');
+    const startSec = document.getElementById('startSec');
+    const endSec = document.getElementById('endSec');
+    const silenceCut = document.getElementById('silenceCut');
+    const layoutMode = document.getElementById('layoutMode');
+    const colorFilter = document.getElementById('colorFilter');
+    const hookInput = document.getElementById('hookInput');
+    const captionsInput = document.getElementById('captionsInput');
+    const resultVideo = document.getElementById('resultVideo');
+    const generateBtn = document.getElementById('generateBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusBox = document.getElementById('statusBox');
+
+    function fmt(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    findPeaksBtn.addEventListener('click', async () => {
+      const url = ytUrl.value.trim();
+      if (!url) {
+        statusBox.textContent = 'Please paste a YouTube URL first.';
+        return;
+      }
+
+      findPeaksBtn.disabled = true;
+      peaksList.innerHTML = '';
+      statusBox.textContent = 'Scanning YouTube video for Most-Replayed viral spikes...';
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Analysis failed');
+
+        videoInfo.textContent = `${data.title} (${fmt(data.duration)})`;
+
+        data.peaks.forEach((p, idx) => {
+          const item = document.createElement('div');
+          item.className = 'clip-item' + (idx === 0 ? ' active' : '');
+          item.innerHTML = `
+            <div>
+              <strong>#${idx + 1}: ${fmt(p.start)} – ${fmt(p.end)}</strong>
+              <div style="font-size:0.78rem; color:var(--muted);">${p.label}</div>
+            </div>
+            <span class="clip-badge">Score ${p.score}</span>
+          `;
+          item.onclick = () => {
+            document.querySelectorAll('.clip-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            startSec.value = p.start;
+            endSec.value = p.end;
+          };
+          peaksList.appendChild(item);
+
+          if (idx === 0) {
+            startSec.value = p.start;
+            endSec.value = p.end;
+          }
+        });
+
+        statusBox.textContent = 'Viral moments found! Select any peak above and click "Generate Short From URL".';
+      } catch (err) {
+        statusBox.textContent = `Error: ${err.message}`;
+      } finally {
+        findPeaksBtn.disabled = false;
+      }
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      const url = ytUrl.value.trim();
+      if (!url) {
+        statusBox.textContent = 'Please paste a YouTube URL first.';
+        return;
+      }
+
+      generateBtn.disabled = true;
+      saveBtn.style.display = 'none';
+      statusBox.textContent = 'Downloading clip from YouTube, cutting dead air, reframing 9:16, and rendering MP4...';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url,
+            start: Number(startSec.value),
+            end: Number(endSec.value),
+            layoutMode: layoutMode.value,
+            silenceCut: silenceCut.value,
+            colorFilter: colorFilter.value,
+            hookText: hookInput.value,
+            captions: captionsInput.value
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to generate video');
+
+        resultVideo.src = data.videoUrl;
+        resultVideo.load();
+        saveBtn.href = data.videoUrl;
+        saveBtn.download = data.filename;
+        saveBtn.style.display = 'block';
+        statusBox.textContent = 'Done! Preview your Short above or click "Save MP4 to Laptop / Phone".';
+      } catch (err) {
+        statusBox.textContent = `Error: ${err.message}`;
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
