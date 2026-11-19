@@ -16,6 +16,14 @@ if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
 app.use('/exports', express.static(OUT_DIR));
 
+// Shared yt-dlp anti-block arguments (uses Node JS runtime + mobile/TV player clients)
+const YT_ARGS = [
+  '--js-runtimes', 'node',
+  '--extractor-args', 'youtube:player_client=android_vr,tv_embedded,web',
+  '--no-check-certificates',
+  '--geo-bypass'
+];
+
 function runCmd(cmd, args) {
   return new Promise((resolve, reject) => {
     execFile(cmd, args, { maxBuffer: 1024 * 1024 * 30 }, (err, stdout, stderr) => {
@@ -31,6 +39,7 @@ app.post('/api/analyze', async (req, res) => {
 
   try {
     const raw = await runCmd('yt-dlp', [
+      ...YT_ARGS,
       '--dump-single-json',
       '--no-playlist',
       '--skip-download',
@@ -112,6 +121,7 @@ app.post('/api/generate', async (req, res) => {
     const e = Math.max(s + 5, Number(end) || s + 20);
 
     await runCmd('yt-dlp', [
+      ...YT_ARGS,
       '-f', 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
       '--download-sections', `*${s}-${e}`,
       '--force-keyframes-at-cuts',
